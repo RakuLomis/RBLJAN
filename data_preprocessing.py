@@ -32,6 +32,134 @@ def binary_search(arr, target):
     return -1
 
 
+def _anonymize_sni_in_client_hello(buf, start, end):
+    """Mask TLS SNI host bytes in a ClientHello fragment [start, end)."""
+    changed = False
+    p = start
+    if p + 34 > end:
+        return changed
+    p += 2 + 32  # client_version + random
+
+    if p + 1 > end:
+        return changed
+    sid_len = buf[p]
+    p += 1 + sid_len
+    if p + 2 > end:
+        return changed
+
+    cs_len = (buf[p] << 8) | buf[p + 1]
+    p += 2 + cs_len
+    if p + 1 > end:
+        return changed
+
+    comp_len = buf[p]
+    p += 1 + comp_len
+    if p + 2 > end:
+        return changed
+
+    ext_total_len = (buf[p] << 8) | buf[p + 1]
+    p += 2
+    ext_end = min(p + ext_total_len, end)
+
+    while p + 4 <= ext_end:
+        ext_type = (buf[p] << 8) | buf[p + 1]
+        ext_len = (buf[p + 2] << 8) | buf[p + 3]
+        p += 4
+        e_end = p + ext_len
+        if e_end > ext_end:
+            break
+        if ext_type == 0 and ext_len >= 2:  # server_name
+            list_len = (buf[p] << 8) | buf[p + 1]
+            q = p + 2
+            list_end = min(q + list_len, e_end)
+            while q + 3 <= list_end:
+                name_type = buf[q]
+                name_len = (buf[q + 1] << 8) | buf[q + 2]
+                q += 3
+                if q + name_len > list_end:
+                    break
+                if name_type == 0:
+                    for i in range(q, q + name_len):
+                        buf[i] = 0
+                    changed = True
+                q += name_len
+        p = e_end
+    return changed
+
+
+def _anonymize_tls_sni_in_payload(payload_bytes):
+    """Mask SNI host bytes in TLS ClientHello records found in TCP payload."""
+    buf = bytearray(payload_bytes)
+    changed = False
+    i = 0
+    n = len(buf)
+    while i + 5 <= n:
+        content_type = buf[i]
+        tls_major = buf[i + 1]
+        rec_len = (buf[i + 3] << 8) | buf[i + 4]
+        rec_end = i + 5 + rec_len
+        if rec_end > n:
+            break
+        if content_type == 22 and tls_major == 3:  # handshake
+            j = i + 5
+            while j + 4 <= rec_end:
+                hs_type = buf[j]
+                hs_len = (buf[j + 1] << 16) | (buf[j + 2] << 8) | buf[j + 3]
+                hs_end = j + 4 + hs_len
+                if hs_end > rec_end:
+                    break
+                if hs_type == 1:  # ClientHello
+                    if _anonymize_sni_in_client_hello(buf, j + 4, hs_end):
+                        changed = True
+                j = hs_end
+        i = rec_end
+    return bytes(buf), changed
+
+
+def anonymize_tls_sni_in_ip_packet(packet_bytes):
+    """
+    Mask TLS SNI in an IP packet (v4/v6, TCP only), preserving packet length.
+    Returns original bytes if parsing fails or packet is non-TCP/non-TLS.
+    """
+    if packet_bytes is None or len(packet_bytes) < 1:
+        return packet_bytes
+    b = packet_bytes
+    ver = b[0] >> 4
+    tcp_start = None
+    if ver == 4:
+        if len(b) < 20:
+            return packet_bytes
+        ihl = (b[0] & 0x0F) * 4
+        if ihl < 20 or len(b) < ihl + 20:
+            return packet_bytes
+        if b[9] != 6:  # TCP
+            return packet_bytes
+        tcp_start = ihl
+    elif ver == 6:
+        if len(b) < 40 + 20:
+            return packet_bytes
+        if b[6] != 6:  # next header: TCP (no ext header handling)
+            return packet_bytes
+        tcp_start = 40
+    else:
+        return packet_bytes
+
+    if len(b) < tcp_start + 20:
+        return packet_bytes
+    data_offset = (b[tcp_start + 12] >> 4) * 4
+    if data_offset < 20:
+        return packet_bytes
+    payload_start = tcp_start + data_offset
+    if payload_start >= len(b):
+        return packet_bytes
+
+    payload = b[payload_start:]
+    payload_new, changed = _anonymize_tls_sni_in_payload(payload)
+    if not changed:
+        return packet_bytes
+    return b[:payload_start] + payload_new
+
+
 class PCAP_DPKT:
     def __init__(self, _file_in_dirs, _file_out_dir, flow_len=-1, byte_len=-1,
                  flow_flag=False, uniform_byte_len=False, header_len=50, is_payload=True,
@@ -340,7 +468,9 @@ class PCAP_DPKT:
                                     payload.payload.ack = 0
                                 if hasattr(payload.payload, 'seq'):
                                     payload.payload.seq = 0
-                                res = str(binascii.hexlify(bytes_encode(payload)).decode())
+                                pkt_bytes = bytes_encode(payload)
+                                pkt_bytes = anonymize_tls_sni_in_ip_packet(pkt_bytes)
+                                res = str(binascii.hexlify(pkt_bytes).decode())
                                 if self.byte_len != -1:
                                     res = res[:2 * self.byte_len]
                                 res = [''.join(x).upper() for x in zip(res[::2], res[1::2])]
@@ -426,7 +556,9 @@ class PCAP_DPKT:
                                 if isinstance(ip.data, dpkt.tcp.TCP):
                                     ip.data.seq = 0
                                     ip.data.ack = 0
-                                res = str(binascii.hexlify(bytes_encode(ip)).decode())
+                                pkt_bytes = bytes_encode(ip)
+                                pkt_bytes = anonymize_tls_sni_in_ip_packet(pkt_bytes)
+                                res = str(binascii.hexlify(pkt_bytes).decode())
                                 if self.byte_len != -1:
                                     res = res[:2 * self.byte_len]
                                 res = [''.join(x).upper() for x in zip(res[::2], res[1::2])]
@@ -472,11 +604,10 @@ class PCAP_DPKT:
 if __name__ == '__main__':
     s_t_main = time.time()
 
-    _file_in_dir = ['./data/' + DATA_MAP[NUM_LABELS] + '/']
-    _file_out_dir = './data/' + DATA_MAP[NUM_LABELS] + '_pkt/'
-    # _file_out_dir = './data/' + DATA_MAP[NUM_LABELS] + '_flow/'
+    _file_in_dir = ['../../TrafficData/datasets_raw_add2/' + DATA_MAP[NUM_LABELS] + '/']
+    # Flow-level preprocessing output for train_RBLJAN_FLOW
+    _file_out_dir = './data/' + DATA_MAP[NUM_LABELS] + '_flow/'
 
     traffic = PCAP_DPKT(_file_in_dir, _file_out_dir, byte_len=PKT_MAX_LEN)
-    # traffic.get_idx_saved()
-    # traffic.get_flows()
+    traffic.get_flows()
     print('\ndata_preprocessing.py finished with {}s'.format(time.time() - s_t_main))

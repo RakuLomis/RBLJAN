@@ -1,0 +1,9 @@
+{
+  "dataset": "cstnet_tls_1.3",
+  "model": "RBLJAN",
+  "split": "test",
+  "accuracy": 0.8266033254156769,
+  "macro_f1": 0.7859490396211706,
+  "loss": 0.7778486051815706,
+  "checkpoint": "results\\checkpoints\\cstnet_tls_1.3\\best.pt"
+}

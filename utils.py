@@ -29,12 +29,27 @@ MODEL_SAVE_PATH = './model/'
 # CLASSES = ['vimeo', 'spotify', 'voipbuster', 'sinauc', 'cloudmusic', 'weibo', 'baidu', 'tudou', 'amazon', 'thunder',
 #            'gmail', 'pplive', 'qq', 'taobao', 'yahoomail', 'itunes', 'twitter', 'jd', 'sohu', 'youtube', 'youku',
 #            'netflix', 'aimchat', 'kugou', 'skype', 'facebook', 'google', 'mssql', 'ms-exchange']
-CLASSES = ['audio', 'chat', 'file', 'mail', 'streaming', 'voip',
-           'vpn-audio', 'vpn-chat', 'vpn-file', 'vpn-mail', 'vpn-streaming', 'vpn-voip']
+# CLASSES = ['audio', 'chat', 'file', 'mail', 'streaming', 'voip',
+#            'vpn-audio', 'vpn-chat', 'vpn-file', 'vpn-mail', 'vpn-streaming', 'vpn-voip']
+# CLASSES = ['gitlab.com','goat.com','grammarly.com','gravatar.com','huanqiu.com','huawei.com',
+#            'hubspot.com','huya.com','ibm.com','icloud.com','ieee.org','instagram.com',
+#            'iqiyi.com','jb51.net','jd.com','kugou.com','leetcode-cn.com','media.net','mi.com',
+#            'microsoft.com','mozilla.org','msn.com','notion.so','nvidia.com','onlinedown.net',
+#            'oracle.com']
+
+CLASSES = ['adblockplus.org','arin.net','cloudfront.net','coinbase.com','cookielaw.org',
+           'ctfassets.net','doubleclick.net','flipboard.com','garmin.com','getpocket.com',
+           'gmx.net','google.com','google-analytics.com','googleapis.com','googletagmanager.com',
+           'gstatic.com','hotjar.com','hsadspixel.net','hs-scripts.com','hubspot.com',
+           'joinhoney.com','like-video.com','logitech.com','mozilla.net','naver.com',
+           'onetrust.com','qualified.com','robinhood.com','segment.com','sharethis.com',
+           'steamstatic.com','trustarc.com','twitter.com','typekit.net','ubuntu.com','waze.com',
+           'web.de','wistia.com','xnxx-cdn.com','yahoo.co.jp','yimg.jp']
 LABELS = {k: v for k, v in zip(CLASSES, range(len(CLASSES)))}
 
 NUM_LABELS = len(LABELS)
-DATA_MAP = {10: 'USTC-TFC', 12: 'ISCX-VPN', 20: 'X-WEB', 29: 'X-APP'}
+DATA_MAP = {10: 'USTC-TFC', 12: 'ISCX-VPN', 20: 'X-WEB', 29: 'X-APP',
+            26: 'cstnet_tls_1.3', 41: 'CipherSpectrum'}
 
 CUDA = torch.cuda.is_available()
 DEVICE = 0

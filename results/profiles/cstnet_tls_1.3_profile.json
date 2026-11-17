@@ -1,0 +1,33 @@
+{
+  "dataset": "cstnet_tls_1.3",
+  "model": "RBLJAN",
+  "total_params": 357228,
+  "trainable_params": 357228,
+  "active_params_estimated": 357228,
+  "active_param_ratio": 1.0,
+  "dense_equivalent_flops": 617915222,
+  "effective_flops": 617915222,
+  "flops_method": "manual_formula_rbljan_flow_inference_bsz1_multiply_add_as_2_flops_embedding_lookup_excluded",
+  "flops_scope": "single_sample_eval_forward",
+  "flops_breakdown": {
+    "header": {
+      "position_add": 128000,
+      "cosine_similarity": 6951312,
+      "att_byte": 2571386,
+      "flow_sum": 128000,
+      "att_label": 53248
+    },
+    "payload": {
+      "position_add": 3712000,
+      "cosine_similarity": 201215312,
+      "att_byte": 398609442,
+      "flow_sum": 3712000,
+      "att_label": 781248
+    },
+    "classifier": {
+      "fc": 53274
+    }
+  },
+  "dense_equivalent_flops_tool": null,
+  "flops_tool_method": "not_available: No module named 'thop'"
+}

@@ -1,0 +1,33 @@
+{
+  "dataset": "CipherSpectrum",
+  "model": "RBLJAN",
+  "total_params": 498813,
+  "trainable_params": 498813,
+  "active_params_estimated": 498813,
+  "active_param_ratio": 1.0,
+  "dense_equivalent_flops": 951720557,
+  "effective_flops": 951720557,
+  "flops_method": "manual_formula_rbljan_flow_inference_bsz1_multiply_add_as_2_flops_embedding_lookup_excluded",
+  "flops_scope": "single_sample_eval_forward",
+  "flops_breakdown": {
+    "header": {
+      "position_add": 128000,
+      "cosine_similarity": 10813992,
+      "att_byte": 3958586,
+      "flow_sum": 128000,
+      "att_label": 96268
+    },
+    "payload": {
+      "position_add": 3712000,
+      "cosine_similarity": 313017992,
+      "att_byte": 614825442,
+      "flow_sum": 3712000,
+      "att_label": 1244268
+    },
+    "classifier": {
+      "fc": 84009
+    }
+  },
+  "dense_equivalent_flops_tool": null,
+  "flops_tool_method": "not_available: No module named 'thop'"
+}

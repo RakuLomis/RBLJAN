@@ -1,0 +1,19 @@
+{
+  "dataset": "CipherSpectrum",
+  "model": "RBLJAN",
+  "device": "cpu",
+  "cpu_threads": 1,
+  "batch_size_latency": 1,
+  "batch_size_throughput": 32,
+  "seq_length": 1500,
+  "input_length": 1500,
+  "flow_max_len": 10,
+  "warmup_samples": 100,
+  "measured_samples": 1000,
+  "latency_p50_ms": 74.8827001079917,
+  "latency_p90_ms": 75.95800003036857,
+  "latency_p95_ms": 76.35520002804697,
+  "latency_p99_ms": 77.26769987493753,
+  "latency_mean_ms": 75.02813989971764,
+  "throughput_samples_per_s": 12.233952628743594
+}

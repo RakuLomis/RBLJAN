@@ -190,7 +190,9 @@ class RBLJAN_Classifier_FLOW(nn.Module):
         LH = self.label_h_embed(self.overall_label_idx)
         GH = get_cosine_similarity_matrix(H, LH).view(batch_size, -1, self.size_h)  # b * k * len
         att_b_h = self.att_b_h(GH)
-        H = torch.matmul(att_b_h.unsqueeze(1), torch.sum(H.view(batch_size, -1, self.size_h, self.embedding_dim), dim=1)).view(batch_size, -1)
+        H = torch.sum(H.view(batch_size, -1, self.size_h, self.embedding_dim), dim=1)
+        H = F.avg_pool2d(H, kernel_size=(self.ngram_h, 1), stride=(1, 1))
+        H = torch.matmul(att_b_h.unsqueeze(1), H).view(batch_size, -1)
         att_l_h = self.att_l_h(GH)
         GH = torch.matmul(att_l_h, LH).view(batch_size, -1)
 
@@ -201,8 +203,9 @@ class RBLJAN_Classifier_FLOW(nn.Module):
         GP = get_cosine_similarity_matrix(P, LP).view(batch_size, -1, self.size_p)  # b * k * l
 
         att_b_p = self.att_b_p(GP)
-        # P = F.avg_pool2d(P, kernel_size=(self.ngram_p, 1), stride=(1, 1))
-        P = torch.matmul(att_b_p.unsqueeze(1), torch.sum(P.view(batch_size, -1, self.size_p, self.embedding_dim), dim=1)).view(batch_size, -1)
+        P = torch.sum(P.view(batch_size, -1, self.size_p, self.embedding_dim), dim=1)
+        P = F.avg_pool2d(P, kernel_size=(self.ngram_p, 1), stride=(1, 1))
+        P = torch.matmul(att_b_p.unsqueeze(1), P).view(batch_size, -1)
 
         att_l_p = self.att_l_p(GP)
         GP = torch.matmul(att_l_p, LP).view(batch_size, -1)
@@ -235,12 +238,14 @@ class ATT_BYTE(nn.Module):
             nn.ReLU()
         )
 
-    def forward(self, similarity_matrix, B):
+    def forward(self, similarity_matrix, B=None):
         batch_size = similarity_matrix.size(0)
         similarity_matrix = similarity_matrix.transpose(-1, -2)
         att_byte = self.conv(similarity_matrix.unsqueeze(1)).view(batch_size, self.out_channels, -1)    # [bs, oc, len-ngram+1]
         att_byte = F.max_pool2d(att_byte, (self.out_channels, 1))
         att_byte = F.softmax(att_byte.view(batch_size, -1), dim=1)
+        if B is None:
+            return att_byte
         B = F.avg_pool2d(B, kernel_size=(self.ngram, 1), stride=(1, 1))
         att_byte = torch.matmul(att_byte.unsqueeze(1), B).view(batch_size, -1)
 

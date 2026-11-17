@@ -1,0 +1,9 @@
+{
+  "dataset": "CipherSpectrum",
+  "model": "RBLJAN",
+  "split": "test",
+  "accuracy": 0.9172129157562515,
+  "macro_f1": 0.8974131904365077,
+  "loss": 0.9874317897821061,
+  "checkpoint": "results\\checkpoints\\CipherSpectrum\\best.pt"
+}

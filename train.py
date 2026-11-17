@@ -167,7 +167,8 @@ def train_RBLJAN_FLOW(is_save=True, is_load=False, is_shuffle=False):
     #     print("Use", len(gpus_idx), 'gpus:', gpus_idx)
     #     model = nn.DataParallel(model, device_ids=gpus_idx)
 
-    train_loader, test_loader = get_flow_dataloader("./data/USTC-TFC-2016_result_doc_flow/", 32)
+    flow_data_dir = "./data/" + DATA_MAP[NUM_LABELS] + "_flow/"
+    train_loader, test_loader = get_flow_dataloader(flow_data_dir, 32)
     train_loader.load_all_batches()
     test_loader.load_all_batches()
 
@@ -452,7 +453,7 @@ if __name__ == '__main__':
     print('start to train...')
 
     # train_RBLJAN(is_save=True, model_type='cnn')
-    train_RBLJAN_no_GAN(is_save=False, is_load=False, is_shuffle=False)
-    # train_RBLJAN_FLOW(is_save=False, is_load=False, is_shuffle=False)
+    # train_RBLJAN_no_GAN(is_save=False, is_load=False, is_shuffle=False)
+    train_RBLJAN_FLOW(is_save=False, is_load=False, is_shuffle=False)
     
     print('training done with {}s'.format(time.time() - s_t))

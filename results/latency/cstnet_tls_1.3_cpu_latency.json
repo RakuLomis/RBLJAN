@@ -1,0 +1,19 @@
+{
+  "dataset": "cstnet_tls_1.3",
+  "model": "RBLJAN",
+  "device": "cpu",
+  "cpu_threads": 1,
+  "batch_size_latency": 1,
+  "batch_size_throughput": 32,
+  "seq_length": 1500,
+  "input_length": 1500,
+  "flow_max_len": 10,
+  "warmup_samples": 100,
+  "measured_samples": 1000,
+  "latency_p50_ms": 60.443999944254756,
+  "latency_p90_ms": 61.68499984778464,
+  "latency_p95_ms": 62.23340006545186,
+  "latency_p99_ms": 64.5014001056552,
+  "latency_mean_ms": 60.70102380332537,
+  "throughput_samples_per_s": 14.875982486507707
+}
